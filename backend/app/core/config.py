@@ -1,7 +1,16 @@
-from datetime import timedelta
+import os
+from dotenv import load_dotenv
 
-# Secret key for JWT
-SECRET_KEY = "mailbrain_super_secret_key_change_this_in_production"
+load_dotenv()
+
+# Secret key for JWT — loaded from environment, never hardcoded
+SECRET_KEY = os.getenv("SECRET_KEY")
+
+if not SECRET_KEY:
+    raise RuntimeError(
+        "SECRET_KEY is not set. Create a .env file with SECRET_KEY=<your-secret> "
+        "(see .env.example)."
+    )
 
 # Algorithm
 ALGORITHM = "HS256"
