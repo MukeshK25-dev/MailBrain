@@ -85,3 +85,17 @@ export const markEmailImportant = async (
 
   return response.data;
 };
+
+export const analyzeEmail = async (
+  emailData
+) => {
+  const response = await axios.post(
+    "/emails/analyze",
+    emailData,
+    {
+      headers: getAuthHeaders(),
+    }
+  );
+
+  return response.data;
+};

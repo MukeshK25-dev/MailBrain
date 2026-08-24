@@ -13,6 +13,8 @@ function Dashboard() {
   const [emails, setEmails] = useState([]);
   const [stats, setStats] = useState(null);
 
+  const [search, setSearch] = useState("");
+
   const [sender, setSender] = useState("");
   const [recipient, setRecipient] = useState("");
   const [subject, setSubject] = useState("");
@@ -31,17 +33,32 @@ function Dashboard() {
     loadDashboardData();
   }, []);
 
-  const loadDashboardData = async () => {
+  const loadDashboardData = async (
+    searchTerm = ""
+  ) => {
     try {
-      const emailData = await getEmails();
-      const statsData = await getStatistics();
+      const emailData = await getEmails(
+        searchTerm
+      );
+
+      const statsData =
+        await getStatistics();
 
       setEmails(emailData.emails || []);
       setStats(statsData.statistics);
     } catch (error) {
-      console.error("Dashboard Error:", error);
+      console.error(error);
       alert("Failed to load dashboard");
     }
+  };
+
+  const handleSearch = async () => {
+    await loadDashboardData(search);
+  };
+
+  const handleClearSearch = async () => {
+    setSearch("");
+    await loadDashboardData();
   };
 
   const handleCreateEmail = async (e) => {
@@ -62,20 +79,22 @@ function Dashboard() {
       setSubject("");
       setBody("");
 
-      loadDashboardData();
+      loadDashboardData(search);
     } catch (error) {
       console.error(error);
       alert("Failed to create email");
     }
   };
 
-  const handleDeleteEmail = async (emailId) => {
+  const handleDeleteEmail = async (
+    emailId
+  ) => {
     try {
       await deleteEmail(emailId);
 
       alert("Email deleted successfully");
 
-      loadDashboardData();
+      loadDashboardData(search);
     } catch (error) {
       console.error(error);
       alert("Failed to delete email");
@@ -92,7 +111,7 @@ function Dashboard() {
         !currentStatus
       );
 
-      loadDashboardData();
+      loadDashboardData(search);
     } catch (error) {
       console.error(error);
       alert("Failed to update read status");
@@ -109,7 +128,7 @@ function Dashboard() {
         !currentStatus
       );
 
-      loadDashboardData();
+      loadDashboardData(search);
     } catch (error) {
       console.error(error);
       alert("Failed to update importance");
@@ -131,6 +150,33 @@ function Dashboard() {
 
       <hr />
 
+      <h2>Search Emails</h2>
+
+      <input
+        type="text"
+        placeholder="Search subject or sender"
+        value={search}
+        onChange={(e) =>
+          setSearch(e.target.value)
+        }
+      />
+
+      {" "}
+
+      <button onClick={handleSearch}>
+        Search
+      </button>
+
+      {" "}
+
+      <button
+        onClick={handleClearSearch}
+      >
+        Clear
+      </button>
+
+      <hr />
+
       <h2>Create Email</h2>
 
       <form onSubmit={handleCreateEmail}>
@@ -144,8 +190,7 @@ function Dashboard() {
           required
         />
 
-        <br />
-        <br />
+        <br /><br />
 
         <input
           type="text"
@@ -157,8 +202,7 @@ function Dashboard() {
           required
         />
 
-        <br />
-        <br />
+        <br /><br />
 
         <input
           type="text"
@@ -170,8 +214,7 @@ function Dashboard() {
           required
         />
 
-        <br />
-        <br />
+        <br /><br />
 
         <textarea
           placeholder="Email Body"
@@ -184,8 +227,7 @@ function Dashboard() {
           required
         />
 
-        <br />
-        <br />
+        <br /><br />
 
         <button type="submit">
           Create Email
