@@ -14,16 +14,28 @@ function Dashboard() {
   const [stats, setStats] = useState(null);
 
   const [search, setSearch] = useState("");
+  const [priority, setPriority] =
+    useState("");
+  const [category, setCategory] =
+    useState("");
+  const [isRead, setIsRead] =
+    useState("");
+  const [isImportant, setIsImportant] =
+    useState("");
 
   const [sender, setSender] = useState("");
-  const [recipient, setRecipient] = useState("");
-  const [subject, setSubject] = useState("");
+  const [recipient, setRecipient] =
+    useState("");
+  const [subject, setSubject] =
+    useState("");
   const [body, setBody] = useState("");
 
   const navigate = useNavigate();
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
+    const token = localStorage.getItem(
+      "token"
+    );
 
     if (!token) {
       navigate("/");
@@ -34,12 +46,11 @@ function Dashboard() {
   }, []);
 
   const loadDashboardData = async (
-    searchTerm = ""
+    filters = {}
   ) => {
     try {
-      const emailData = await getEmails(
-        searchTerm
-      );
+      const emailData =
+        await getEmails(filters);
 
       const statsData =
         await getStatistics();
@@ -53,13 +64,25 @@ function Dashboard() {
   };
 
   const handleSearch = async () => {
-    await loadDashboardData(search);
+    await loadDashboardData({
+      search,
+      priority,
+      category,
+      is_read: isRead,
+      is_important: isImportant,
+    });
   };
 
-  const handleClearSearch = async () => {
-    setSearch("");
-    await loadDashboardData();
-  };
+  const handleClearFilters =
+    async () => {
+      setSearch("");
+      setPriority("");
+      setCategory("");
+      setIsRead("");
+      setIsImportant("");
+
+      await loadDashboardData();
+    };
 
   const handleCreateEmail = async (e) => {
     e.preventDefault();
@@ -72,14 +95,16 @@ function Dashboard() {
         body,
       });
 
-      alert("Email created successfully");
+      alert(
+        "Email created successfully"
+      );
 
       setSender("");
       setRecipient("");
       setSubject("");
       setBody("");
 
-      loadDashboardData(search);
+      await handleSearch();
     } catch (error) {
       console.error(error);
       alert("Failed to create email");
@@ -92,9 +117,11 @@ function Dashboard() {
     try {
       await deleteEmail(emailId);
 
-      alert("Email deleted successfully");
+      alert(
+        "Email deleted successfully"
+      );
 
-      loadDashboardData(search);
+      await handleSearch();
     } catch (error) {
       console.error(error);
       alert("Failed to delete email");
@@ -111,29 +138,34 @@ function Dashboard() {
         !currentStatus
       );
 
-      loadDashboardData(search);
+      await handleSearch();
     } catch (error) {
       console.error(error);
-      alert("Failed to update read status");
-    }
-  };
-
-  const handleMarkImportant = async (
-    emailId,
-    currentStatus
-  ) => {
-    try {
-      await markEmailImportant(
-        emailId,
-        !currentStatus
+      alert(
+        "Failed to update read status"
       );
-
-      loadDashboardData(search);
-    } catch (error) {
-      console.error(error);
-      alert("Failed to update importance");
     }
   };
+
+  const handleMarkImportant =
+    async (
+      emailId,
+      currentStatus
+    ) => {
+      try {
+        await markEmailImportant(
+          emailId,
+          !currentStatus
+        );
+
+        await handleSearch();
+      } catch (error) {
+        console.error(error);
+        alert(
+          "Failed to update importance"
+        );
+      }
+    };
 
   const handleLogout = () => {
     localStorage.removeItem("token");
@@ -150,29 +182,117 @@ function Dashboard() {
 
       <hr />
 
-      <h2>Search Emails</h2>
+      <h2>Email Filters</h2>
 
       <input
         type="text"
-        placeholder="Search subject or sender"
+        placeholder="Search emails"
         value={search}
         onChange={(e) =>
           setSearch(e.target.value)
         }
       />
 
+      <br />
+      <br />
+
+      <select
+        value={priority}
+        onChange={(e) =>
+          setPriority(e.target.value)
+        }
+      >
+        <option value="">
+          All Priorities
+        </option>
+        <option value="high">
+          High
+        </option>
+        <option value="medium">
+          Medium
+        </option>
+        <option value="low">
+          Low
+        </option>
+      </select>
+
+      {" "}
+
+      <select
+        value={category}
+        onChange={(e) =>
+          setCategory(e.target.value)
+        }
+      >
+        <option value="">
+          All Categories
+        </option>
+        <option value="work">
+          Work
+        </option>
+        <option value="finance">
+          Finance
+        </option>
+        <option value="shopping">
+          Shopping
+        </option>
+        <option value="personal">
+          Personal
+        </option>
+      </select>
+
+      {" "}
+
+      <select
+        value={isRead}
+        onChange={(e) =>
+          setIsRead(e.target.value)
+        }
+      >
+        <option value="">
+          All Read Status
+        </option>
+        <option value="true">
+          Read
+        </option>
+        <option value="false">
+          Unread
+        </option>
+      </select>
+
+      {" "}
+
+      <select
+        value={isImportant}
+        onChange={(e) =>
+          setIsImportant(
+            e.target.value
+          )
+        }
+      >
+        <option value="">
+          All Importance
+        </option>
+        <option value="true">
+          Important
+        </option>
+        <option value="false">
+          Not Important
+        </option>
+      </select>
+
       {" "}
 
       <button onClick={handleSearch}>
-        Search
+        Apply Filters
       </button>
 
       {" "}
 
       <button
-        onClick={handleClearSearch}
+        onClick={handleClearFilters}
       >
-        Clear
+        Clear Filters
       </button>
 
       <hr />
@@ -190,19 +310,23 @@ function Dashboard() {
           required
         />
 
-        <br /><br />
+        <br />
+        <br />
 
         <input
           type="text"
           placeholder="Recipient"
           value={recipient}
           onChange={(e) =>
-            setRecipient(e.target.value)
+            setRecipient(
+              e.target.value
+            )
           }
           required
         />
 
-        <br /><br />
+        <br />
+        <br />
 
         <input
           type="text"
@@ -214,7 +338,8 @@ function Dashboard() {
           required
         />
 
-        <br /><br />
+        <br />
+        <br />
 
         <textarea
           placeholder="Email Body"
@@ -227,7 +352,8 @@ function Dashboard() {
           required
         />
 
-        <br /><br />
+        <br />
+        <br />
 
         <button type="submit">
           Create Email
@@ -240,13 +366,47 @@ function Dashboard() {
 
       {stats ? (
         <div>
-          <p>Total Emails: {stats.total_emails}</p>
-          <p>Read Emails: {stats.read_emails}</p>
-          <p>Unread Emails: {stats.unread_emails}</p>
-          <p>Important Emails: {stats.important_emails}</p>
-          <p>High Priority: {stats.high_priority}</p>
-          <p>Medium Priority: {stats.medium_priority}</p>
-          <p>Low Priority: {stats.low_priority}</p>
+          <p>
+            Total Emails:{" "}
+            {stats.total_emails}
+          </p>
+
+          <p>
+            Read Emails:{" "}
+            {stats.read_emails}
+          </p>
+
+          <p>
+            Unread Emails:{" "}
+            {stats.unread_emails}
+          </p>
+
+          <p>
+            Important Emails:{" "}
+            {stats.important_emails}
+          </p>
+
+          <p>
+            Action Required:{" "}
+            {
+              stats.action_required_emails
+            }
+          </p>
+
+          <p>
+            High Priority:{" "}
+            {stats.high_priority}
+          </p>
+
+          <p>
+            Medium Priority:{" "}
+            {stats.medium_priority}
+          </p>
+
+          <p>
+            Low Priority:{" "}
+            {stats.low_priority}
+          </p>
         </div>
       ) : (
         <p>Loading statistics...</p>
@@ -259,7 +419,10 @@ function Dashboard() {
       {emails.length === 0 ? (
         <p>No emails found.</p>
       ) : (
-        <table border="1" cellPadding="10">
+        <table
+          border="1"
+          cellPadding="10"
+        >
           <thead>
             <tr>
               <th>ID</th>
@@ -269,6 +432,7 @@ function Dashboard() {
               <th>Category</th>
               <th>Read</th>
               <th>Important</th>
+              <th>Action</th>
               <th>Actions</th>
             </tr>
           </thead>
@@ -290,6 +454,12 @@ function Dashboard() {
 
                 <td>
                   {email.is_important
+                    ? "Yes"
+                    : "No"}
+                </td>
+
+                <td>
+                  {email.requires_action
                     ? "Yes"
                     : "No"}
                 </td>
@@ -345,3 +515,4 @@ function Dashboard() {
 }
 
 export default Dashboard;
+

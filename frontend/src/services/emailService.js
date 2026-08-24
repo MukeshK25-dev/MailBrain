@@ -8,11 +8,42 @@ const getAuthHeaders = () => {
   };
 };
 
-export const getEmails = async (search = "") => {
+export const getEmails = async (filters = {}) => {
+  const params = new URLSearchParams();
+
+  if (filters.search) {
+    params.append("search", filters.search);
+  }
+
+  if (filters.priority) {
+    params.append("priority", filters.priority);
+  }
+
+  if (filters.category) {
+    params.append("category", filters.category);
+  }
+
+  if (
+    filters.is_read !== undefined &&
+    filters.is_read !== ""
+  ) {
+    params.append("is_read", filters.is_read);
+  }
+
+  if (
+    filters.is_important !== undefined &&
+    filters.is_important !== ""
+  ) {
+    params.append(
+      "is_important",
+      filters.is_important
+    );
+  }
+
   let url = "/emails";
 
-  if (search.trim()) {
-    url += `?search=${encodeURIComponent(search)}`;
+  if (params.toString()) {
+    url += `?${params.toString()}`;
   }
 
   const response = await axios.get(url, {
