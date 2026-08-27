@@ -8,6 +8,10 @@ function EmailDetails() {
   const navigate = useNavigate();
 
   const [email, setEmail] = useState(null);
+  const [generatedReply, setGeneratedReply] =
+    useState("");
+  const [loadingReply, setLoadingReply] =
+    useState(false);
 
   useEffect(() => {
     loadEmail();
@@ -34,6 +38,38 @@ function EmailDetails() {
       alert("Failed to load email");
     }
   };
+
+  const handleGenerateReply =
+    async () => {
+      try {
+        setLoadingReply(true);
+
+        const token =
+          localStorage.getItem("token");
+
+        const response =
+          await axios.post(
+            `/emails/${id}/generate-reply`,
+            {},
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            }
+          );
+
+        setGeneratedReply(
+          response.data.reply
+        );
+      } catch (error) {
+        console.error(error);
+        alert(
+          "Failed to generate reply"
+        );
+      } finally {
+        setLoadingReply(false);
+      }
+    };
 
   if (!email) {
     return <h2>Loading...</h2>;
@@ -117,6 +153,44 @@ function EmailDetails() {
           ? "Yes"
           : "No"}
       </p>
+
+      <hr />
+
+      <h2>AI Reply Generator</h2>
+
+      <button
+        onClick={
+          handleGenerateReply
+        }
+        disabled={loadingReply}
+      >
+        {loadingReply
+          ? "Generating..."
+          : "Generate AI Reply"}
+      </button>
+
+      {generatedReply && (
+        <>
+          <h3>
+            Generated Reply
+          </h3>
+
+          <div
+            style={{
+              border:
+                "1px solid green",
+              padding: "15px",
+              marginTop: "10px",
+              whiteSpace:
+                "pre-wrap",
+              backgroundColor:
+                "#f5fff5",
+            }}
+          >
+            {generatedReply}
+          </div>
+        </>
+      )}
     </div>
   );
 }

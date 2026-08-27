@@ -14,7 +14,11 @@ from backend.app.services.email_service import (
     mark_email_important,
     get_email_statistics,
 )
-from backend.app.services.ai_service import analyze_email_content
+from backend.app.services.ai_service import (
+    analyze_email_content,
+    generate_email_reply,
+    extract_email_tasks,
+)
 from backend.app.core.auth import get_current_user
 
 router = APIRouter()
@@ -152,4 +156,55 @@ def analyze_email(
     return {
         "message": "Email analyzed successfully",
         "analysis": analysis,
+    }
+
+
+@router.post("/emails/{email_id}/generate-reply")
+def generate_reply(
+    email_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    email_response = get_email(
+        db=db,
+        email_id=email_id,
+        owner_id=current_user.id,
+    )
+
+    email = email_response["email"]
+
+    reply = generate_email_reply(
+        sender=email["sender"],
+        subject=email["subject"],
+        body=email["body"],
+    )
+
+    return {
+        "message": "Reply generated successfully",
+        "reply": reply["reply"],
+    }
+
+
+@router.post("/emails/{email_id}/extract-tasks")
+def extract_tasks(
+    email_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    email_response = get_email(
+        db=db,
+        email_id=email_id,
+        owner_id=current_user.id,
+    )
+
+    email = email_response["email"]
+
+    tasks = extract_email_tasks(
+        subject=email["subject"],
+        body=email["body"],
+    )
+
+    return {
+        "message": "Tasks extracted successfully",
+        "tasks": tasks,
     }

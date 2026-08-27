@@ -1,3 +1,6 @@
+import re
+
+
 def analyze_email_content(
     sender: str,
     subject: str,
@@ -12,14 +15,7 @@ def analyze_email_content(
     - importance
     """
 
-    # Analyze subject and body only.
-    # Sender email addresses can accidentally contain keywords
-    # such as "exam" inside domains like example.com.
     text = f"{subject} {body}".lower()
-
-    # -----------------------------
-    # ACTION DETECTION
-    # -----------------------------
 
     action_keywords = [
         "reply",
@@ -45,10 +41,6 @@ def analyze_email_content(
         keyword in text
         for keyword in action_keywords
     )
-
-    # -----------------------------
-    # CATEGORY CLASSIFICATION
-    # -----------------------------
 
     promotion_keywords = [
         "offer",
@@ -132,7 +124,6 @@ def analyze_email_content(
         "party",
     ]
 
-    # Check categories in order of specificity.
     if any(
         keyword in text
         for keyword in promotion_keywords
@@ -165,10 +156,6 @@ def analyze_email_content(
 
     else:
         category = "other"
-
-    # -----------------------------
-    # PRIORITY CLASSIFICATION
-    # -----------------------------
 
     high_priority_keywords = [
         "urgent",
@@ -217,30 +204,11 @@ def analyze_email_content(
     else:
         priority = "low"
 
-    # Promotional emails should normally be low priority.
     if category == "promotions":
-        if any(
-            keyword in text
-            for keyword in high_priority_keywords
-        ):
-            priority = "high"
-        else:
-            priority = "low"
+        priority = "low"
 
-    # Personal emails should normally be low priority
-    # unless they contain an explicitly urgent situation.
     if category == "personal":
-        if any(
-            keyword in text
-            for keyword in high_priority_keywords
-        ):
-            priority = "high"
-        else:
-            priority = "low"
-
-    # -----------------------------
-    # IMPORTANCE CLASSIFICATION
-    # -----------------------------
+        priority = "low"
 
     important_keywords = [
         "urgent",
@@ -266,13 +234,8 @@ def analyze_email_content(
         for keyword in important_keywords
     )
 
-    # -----------------------------
-    # SUMMARY
-    # -----------------------------
-
     if subject.strip():
         summary = subject.strip()
-
     else:
         words = body.strip().split()
 
@@ -287,4 +250,151 @@ def analyze_email_content(
         "category": category,
         "priority": priority,
         "is_important": is_important,
+    }
+
+
+def generate_email_reply(
+    sender: str,
+    subject: str,
+    body: str,
+):
+    """
+    Generate a simple AI reply
+    based on email content.
+    """
+
+    text = f"{subject} {body}".lower()
+
+    if (
+        "interview" in text
+        or "internship" in text
+        or "job" in text
+    ):
+        reply = f"""
+Dear Sir/Madam,
+
+Thank you for your email regarding {subject}.
+
+I appreciate the opportunity and confirm my interest.
+
+Please let me know if any further information is required.
+
+Regards,
+Mukesh
+"""
+
+    elif (
+        "project" in text
+        or "assignment" in text
+        or "submission" in text
+    ):
+        reply = f"""
+Dear Sir/Madam,
+
+Thank you for the reminder.
+
+I will make sure the required work is completed and submitted on time.
+
+Regards,
+Mukesh
+"""
+
+    elif (
+        "payment" in text
+        or "invoice" in text
+        or "bank" in text
+    ):
+        reply = f"""
+Dear Sir/Madam,
+
+Thank you for the information.
+
+I have noted the details and will review them accordingly.
+
+Regards,
+Mukesh
+"""
+
+    else:
+        reply = f"""
+Dear Sir/Madam,
+
+Thank you for your email.
+
+I have received your message and will get back to you shortly.
+
+Regards,
+Mukesh
+"""
+
+    return {
+        "reply": reply.strip()
+    }
+
+
+def extract_email_tasks(
+    subject: str,
+    body: str,
+):
+    """
+    Extract tasks and deadlines from email.
+    """
+
+    text = f"{subject}. {body}"
+
+    task_keywords = [
+        "submit",
+        "complete",
+        "attend",
+        "review",
+        "register",
+        "apply",
+        "confirm",
+        "verify",
+        "reply",
+        "respond",
+        "pay",
+    ]
+
+    deadline_words = [
+        "today",
+        "tomorrow",
+        "monday",
+        "tuesday",
+        "wednesday",
+        "thursday",
+        "friday",
+        "saturday",
+        "sunday",
+    ]
+
+    tasks = []
+    deadlines = []
+
+    sentences = re.split(
+        r"[.!?\n]+",
+        text,
+    )
+
+    for sentence in sentences:
+        sentence = sentence.strip()
+
+        if not sentence:
+            continue
+
+        lower_sentence = sentence.lower()
+
+        for keyword in task_keywords:
+            if keyword in lower_sentence:
+                tasks.append(sentence)
+                break
+
+        for day in deadline_words:
+            if day in lower_sentence:
+                deadlines.append(day.title())
+
+    return {
+        "tasks": list(set(tasks)),
+        "deadlines": list(set(deadlines)),
+        "task_count": len(set(tasks)),
     }
