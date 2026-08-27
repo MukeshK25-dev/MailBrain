@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+
 import {
   getEmails,
   getStatistics,
@@ -14,28 +15,20 @@ function Dashboard() {
   const [stats, setStats] = useState(null);
 
   const [search, setSearch] = useState("");
-  const [priority, setPriority] =
-    useState("");
-  const [category, setCategory] =
-    useState("");
-  const [isRead, setIsRead] =
-    useState("");
-  const [isImportant, setIsImportant] =
-    useState("");
+  const [priority, setPriority] = useState("");
+  const [category, setCategory] = useState("");
+  const [isRead, setIsRead] = useState("");
+  const [isImportant, setIsImportant] = useState("");
 
   const [sender, setSender] = useState("");
-  const [recipient, setRecipient] =
-    useState("");
-  const [subject, setSubject] =
-    useState("");
+  const [recipient, setRecipient] = useState("");
+  const [subject, setSubject] = useState("");
   const [body, setBody] = useState("");
 
   const navigate = useNavigate();
 
   useEffect(() => {
-    const token = localStorage.getItem(
-      "token"
-    );
+    const token = localStorage.getItem("token");
 
     if (!token) {
       navigate("/");
@@ -172,7 +165,7 @@ function Dashboard() {
     navigate("/");
   };
 
-  return (
+    return (
     <div style={{ padding: "20px" }}>
       <h1>MailBrain Dashboard</h1>
 
@@ -366,47 +359,19 @@ function Dashboard() {
 
       {stats ? (
         <div>
-          <p>
-            Total Emails:{" "}
-            {stats.total_emails}
-          </p>
-
-          <p>
-            Read Emails:{" "}
-            {stats.read_emails}
-          </p>
-
-          <p>
-            Unread Emails:{" "}
-            {stats.unread_emails}
-          </p>
-
-          <p>
-            Important Emails:{" "}
-            {stats.important_emails}
-          </p>
-
+          <p>Total Emails: {stats.total_emails}</p>
+          <p>Read Emails: {stats.read_emails}</p>
+          <p>Unread Emails: {stats.unread_emails}</p>
+          <p>Important Emails: {stats.important_emails}</p>
           <p>
             Action Required:{" "}
-            {
-              stats.action_required_emails
-            }
+            {stats.action_required_emails}
           </p>
-
+          <p>High Priority: {stats.high_priority}</p>
           <p>
-            High Priority:{" "}
-            {stats.high_priority}
+            Medium Priority: {stats.medium_priority}
           </p>
-
-          <p>
-            Medium Priority:{" "}
-            {stats.medium_priority}
-          </p>
-
-          <p>
-            Low Priority:{" "}
-            {stats.low_priority}
-          </p>
+          <p>Low Priority: {stats.low_priority}</p>
         </div>
       ) : (
         <p>Loading statistics...</p>
@@ -414,7 +379,7 @@ function Dashboard() {
 
       <hr />
 
-      <h2>Email List</h2>
+            <h2>Email List</h2>
 
       {emails.length === 0 ? (
         <p>No emails found.</p>
@@ -432,7 +397,8 @@ function Dashboard() {
               <th>Category</th>
               <th>Read</th>
               <th>Important</th>
-              <th>Action</th>
+              <th>Action Required</th>
+              <th>View</th>
               <th>Actions</th>
             </tr>
           </thead>
@@ -462,6 +428,18 @@ function Dashboard() {
                   {email.requires_action
                     ? "Yes"
                     : "No"}
+                </td>
+
+                <td>
+                  <button
+                    onClick={() =>
+                      navigate(
+                        `/emails/${email.id}`
+                      )
+                    }
+                  >
+                    View
+                  </button>
                 </td>
 
                 <td>
@@ -515,4 +493,3 @@ function Dashboard() {
 }
 
 export default Dashboard;
-
