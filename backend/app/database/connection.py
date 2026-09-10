@@ -1,13 +1,18 @@
+import os
+
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-# SQLite database file
-DATABASE_URL = "sqlite:///mailbrain.db"
+# Database URL — falls back to local SQLite file for development
+DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///mailbrain.db")
+
+# SQLite requires this flag for use with multiple threads (FastAPI's default worker model)
+connect_args = {"check_same_thread": False} if DATABASE_URL.startswith("sqlite") else {}
 
 # Create the database engine
 engine = create_engine(
     DATABASE_URL,
-    connect_args={"check_same_thread": False}
+    connect_args=connect_args,
 )
 
 # Create database sessions
