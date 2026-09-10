@@ -2,22 +2,31 @@
 
 **Think Less. Mail Smarter.**
 
-MailBrain is a Python backend project for an AI-powered email productivity assistant. This repository currently implements the **authentication foundation** of the project — user registration, login, and JWT-based session handling — built with FastAPI and SQLAlchemy.
+MailBrain is a Python backend project for an email productivity assistant. It's built with FastAPI, SQLAlchemy, and JWT authentication, and implements user accounts, full email CRUD, and rule-based email intelligence (categorization, priority scoring, reply drafting, task extraction).
 
-> 🚧 **Status: Early development.** Email integration, AI features, and the frontend described in the project vision are planned but not yet implemented. See [Current Implementation](#current-implementation) below for what actually exists today.
+> 🚧 **Status: Active development, backend-only.** No frontend UI or real email provider integration (Gmail/Outlook) yet — see [Planned / In Progress](#planned--in-progress).
 
 ---
 
 ## Current Implementation
 
-What's built and working right now:
-
-- **User registration** (`POST /register`)
+### Authentication
+- **User registration** (`POST /register`) — with password length validation (min 8 chars)
 - **User login** (`POST /login`) with JWT access token issuance
-- **Authenticated user lookup** (`GET /me`)
-- Password hashing via `passlib`
+- Password hashing via `passlib` (bcrypt)
 - JWT creation/verification via `python-jose`
-- SQLAlchemy ORM models backed by a SQLite database (development)
+
+### Email management (full CRUD, all scoped to the authenticated user)
+- Add, list (with filters: read/important/requires-action/search/priority/category), get single, update, delete
+- Mark as read / mark as important
+- Aggregate statistics endpoint (`GET /emails/statistics`)
+
+### Email intelligence
+- `POST /emails/analyze` — categorizes an email (work / college / finance / promotions / personal / other), scores priority (high/medium/low), flags whether it requires action, and produces a summary
+- `POST /emails/{id}/generate-reply` — drafts a reply
+- `POST /emails/{id}/extract-tasks` — pulls action items and day-of-week deadlines out of the email body
+
+**Honesty note:** these three endpoints are currently **rule-based** (keyword matching + regex), not calls to an LLM — there's no OpenAI/Anthropic dependency in `requirements.txt` yet. They work, and they're a reasonable v1, but if you're evaluating this as an "AI" project: the intelligence layer today is deterministic pattern matching, not machine learning. Swapping the rule engine in `services/ai_service.py` for a real LLM call is the top item in the roadmap below.
 
 ## Tech Stack
 
@@ -26,19 +35,19 @@ What's built and working right now:
 | Language | Python |
 | Backend Framework | FastAPI |
 | ORM | SQLAlchemy |
-| Database (development) | SQLite |
-| Authentication | JWT (python-jose), password hashing (passlib) |
-| Testing | pytest (dependency installed; tests not yet implemented) |
+| Database | SQLite by default; configurable via `DATABASE_URL` env var (Postgres-ready) |
+| Authentication | JWT (python-jose), password hashing (passlib/bcrypt) |
+| Testing | pytest (dependency installed; automated test suite not yet written) |
 
 ## Project Structure
 
 ```
 backend/app/
-├── api/          # FastAPI route definitions
-├── core/         # Auth, JWT handling, security, config
-├── database/     # SQLAlchemy models, connection, session dependency
-├── schemas/      # Pydantic request/response schemas
-└── services/     # Business logic (user creation, authentication)
+├── api/          # FastAPI route definitions (auth_routes.py, routes.py)
+├── core/         # Auth dependency, JWT handling, password hashing, env-based config
+├── database/     # SQLAlchemy models, engine/session (connection.py)
+├── schemas/      # Pydantic request/response schemas, with input validation
+└── services/     # Business logic — user_service, email_service, ai_service (rule-based)
 ```
 
 ## Setup
@@ -51,25 +60,28 @@ cd MailBrain
 # Install dependencies
 pip install -r requirements.txt
 
+# Configure environment
+cp .env.example .env
+# then edit .env: set SECRET_KEY (generate with: python -c "import secrets; print(secrets.token_hex(32))")
+
 # Run the development server
 uvicorn backend.app.main:app --reload
 ```
 
 The API will be available at `http://127.0.0.1:8000`. Interactive docs at `http://127.0.0.1:8000/docs`.
 
-> **Note:** Before running, a `SECRET_KEY` must be configured for JWT signing. Environment-based configuration is planned — see project docs for details.
+`DATABASE_URL` is optional — omit it and the app uses a local `mailbrain.db` SQLite file automatically.
 
 ## Planned / In Progress
 
-The following are part of the long-term project vision but are **not yet implemented** in this repository:
-
-- Gmail OAuth integration and inbox access
-- AI-powered email summarization and prioritization
-- Spam/phishing detection
+- Replace the rule-based analysis engine with a real LLM call (OpenAI/Anthropic API)
+- Automated tests with `pytest` (dependency is already installed, no tests written yet)
+- Gmail OAuth integration and real inbox sync
 - Frontend interface
-- PostgreSQL production database
+- PostgreSQL in production, SQLite only for local dev
+- Rate limiting and structured logging
 
-See the full plan in [`docs/`](./docs):
+See the full product plan in [`docs/`](./docs):
 - [Project Vision](./docs/01_Project_vision.md)
 - [Product Requirements](./docs/02_PRD.md)
 - [Roadmap](./docs/03_Roadmap.md)
