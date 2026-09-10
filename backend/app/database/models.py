@@ -98,6 +98,7 @@ class Email(Base):
         Integer,
         ForeignKey("users.id"),
         nullable=False,
+        index=True,
     )
 
     owner = relationship(
